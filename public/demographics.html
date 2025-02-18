@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demographics Form</title>
+</head>
+<body>
+    <h1>Demographics Form</h1>
+    <form id="demographicsForm" onsubmit="submitDemographic(event)">
+        <label>First Name:</label>
+        <input type="text" name="firstName" required><br>
+
+        <label>Last Name:</label>
+        <input type="text" name="lastName" required><br>
+
+        <label>Age:</label>
+        <input type="number" name="age" required><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" required><br>
+
+        <label>Gender:</label>
+        <input type="text" name="gender" required><br>
+
+        <label>City:</label>
+        <input type="text" name="city" required><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>All Records</h2>
+    <ul id="recordsList"></ul>
+
+    <script>
+        async function submitDemographic(event) {
+            event.preventDefault();
+            const form = document.getElementById('demographicsForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            const response = await fetch('/api/demographics', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            alert(result.message || 'Submitted successfully!');
+            fetchRecords();
+        }
+
+        async function fetchRecords() {
+            const response = await fetch('/api/demographics');
+            const records = await response.json();
+            const recordsList = document.getElementById('recordsList');
+            recordsList.innerHTML = records.map(record => `
+                <li>${record.firstName} ${record.lastName} (${record.age} years, ${record.city}) 
+                    <button onclick="deleteRecord(${record.id})">Delete</button>
+                </li>
+            `).join('');
+        }
+
+        async function deleteRecord(id) {
+            await fetch(`/api/demographics/${id}`, { method: 'DELETE' });
+            fetchRecords();
+        }
+
+        fetchRecords();
+    </script>
+</body>
+</html>
